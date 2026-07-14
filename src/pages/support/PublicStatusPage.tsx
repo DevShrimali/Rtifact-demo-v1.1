@@ -760,9 +760,11 @@ export function PublicStatusPage() {
     )
   }
 
+  const isDashboard = config.template === 'dashboard'
+
   return (
     <div data-theme={resolvedTheme} style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--fg)' }}>
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: '48px 20px' }}>{body}</div>
+      <div style={{ maxWidth: isDashboard ? 1200 : 760, margin: '0 auto', padding: '48px 20px' }}>{body}</div>
 
       {showSubModal && (
         <div
