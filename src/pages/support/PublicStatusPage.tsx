@@ -353,74 +353,74 @@ export function PublicStatusPage() {
       const history = serviceHistory(selectedService)
 
       body = (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
           {Header}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             <button
               type="button"
               className="btn btn-secondary"
               onClick={() => setSelectedServiceId(null)}
-              style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5 }}
+              style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13.5, padding: '8px 16px' }}
             >
-              <ArrowLeft size={14} /> Back to Dashboard
+              <ArrowLeft size={16} /> Back to Dashboard
             </button>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap', borderBottom: '1px solid var(--border)', paddingBottom: 16 }}>
               <div>
-                <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--fg)', margin: 0 }}>{selectedService.name}</h1>
-                <p style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 4 }}>
-                  Type: {selectedService.type} · Environment: {selectedService.env} · Path: {selectedService.path}
+                <h1 style={{ fontSize: 32, fontWeight: 800, color: 'var(--fg)', margin: 0, letterSpacing: '-0.02em' }}>{selectedService.name}</h1>
+                <p style={{ fontSize: 14, color: 'var(--muted)', marginTop: 6, margin: '6px 0 0' }}>
+                  <span style={{ fontWeight: 600, color: 'var(--fg)' }}>{selectedService.type}</span> · {selectedService.env} · <span style={{ fontFamily: 'monospace', fontSize: 13 }}>{selectedService.path}</span>
                 </p>
               </div>
-              <span className={`badge ${meta.badge}`} style={{ fontSize: 12, padding: '4px 10px' }}>
+              <span className={`badge ${meta.badge}`} style={{ fontSize: 13.5, padding: '6px 14px', borderRadius: 20 }}>
                 {meta.label}
               </span>
             </div>
 
             {/* Stats Panel Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14 }}>
-              <div className="panel" style={{ padding: 16, textAlign: 'center', background: 'var(--surface)' }}>
-                <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Current Status</div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: meta.colorVar, marginTop: 8 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+              <div className="panel" style={{ padding: 22, textAlign: 'center', background: 'var(--surface)', borderRadius: 12 }}>
+                <div style={{ fontSize: 11.5, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.06em' }}>Current Status</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: meta.colorVar, marginTop: 10 }}>
                   {currentHealth === 'operational' ? 'Operational' : currentHealth === 'degraded' ? 'Degraded' : 'Outage'}
                 </div>
               </div>
-              <div className="panel" style={{ padding: 16, textAlign: 'center', background: 'var(--surface)' }}>
-                <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Avg Latency</div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--fg)', marginTop: 8, fontFamily: 'monospace' }}>
+              <div className="panel" style={{ padding: 22, textAlign: 'center', background: 'var(--surface)', borderRadius: 12 }}>
+                <div style={{ fontSize: 11.5, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.06em' }}>Avg Latency</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--fg)', marginTop: 10, fontFamily: 'monospace' }}>
                   {latency}ms
                 </div>
               </div>
-              <div className="panel" style={{ padding: 16, textAlign: 'center', background: 'var(--surface)' }}>
-                <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Latency Range</div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--fg)', marginTop: 8, fontFamily: 'monospace' }}>
-                  {Math.max(1, Math.round(latency * 0.75))} - {Math.round(latency * 1.45)}ms
+              <div className="panel" style={{ padding: 22, textAlign: 'center', background: 'var(--surface)', borderRadius: 12 }}>
+                <div style={{ fontSize: 11.5, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.06em' }}>Latency Range</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--fg)', marginTop: 10, fontFamily: 'monospace' }}>
+                  {Math.max(1, Math.round(latency * 0.75))}-{Math.round(latency * 1.45)}ms
                 </div>
               </div>
-              <div className="panel" style={{ padding: 16, textAlign: 'center', background: 'var(--surface)' }}>
-                <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Last Check</div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--fg)', marginTop: 8 }}>
+              <div className="panel" style={{ padding: 22, textAlign: 'center', background: 'var(--surface)', borderRadius: 12 }}>
+                <div style={{ fontSize: 11.5, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.06em' }}>Last Check</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--fg)', marginTop: 10 }}>
                   Just now
                 </div>
               </div>
             </div>
 
             {/* Check History Timeline */}
-            <div className="panel" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14, background: 'var(--surface)' }}>
+            <div className="panel" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16, background: 'var(--surface)', borderRadius: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--fg)' }}>Recent Checks (90 days)</span>
-                <span style={{ fontSize: 12, color: 'var(--muted)' }}>
-                  Uptime: <span style={{ fontWeight: 700, color: 'var(--success)' }}>{uptimePct(history)}%</span>
+                <span style={{ fontWeight: 800, fontSize: 16, color: 'var(--fg)' }}>Recent Checks (90 days)</span>
+                <span style={{ fontSize: 13, color: 'var(--muted)' }}>
+                  Uptime: <span style={{ fontWeight: 800, color: 'var(--success)' }}>{uptimePct(history)}%</span>
                 </span>
               </div>
-              <div style={{ display: 'flex', gap: 2, height: 28 }}>
+              <div style={{ display: 'flex', gap: 2.5, height: 32 }}>
                 {history.map((h, i) => (
                   <div
                     key={i}
                     style={{
                       flex: 1,
-                      borderRadius: 1.5,
+                      borderRadius: 2,
                       background: h === 'operational' ? 'var(--success)' : h === 'degraded' ? 'var(--warn)' : 'var(--error)',
                       opacity: 0.95
                     }}
@@ -428,117 +428,129 @@ export function PublicStatusPage() {
                   />
                 ))}
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--faint)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--faint)' }}>
                 <span>90 days ago</span>
                 <span>Today</span>
               </div>
             </div>
 
             {/* Latency Line Graph */}
-            <div className="panel" style={{ padding: 20, background: 'var(--surface)' }}>
-              <h3 style={{ fontWeight: 700, fontSize: 14, color: 'var(--fg)', marginBottom: 16 }}>Response Time Trend (last 24h)</h3>
-              <div style={{ height: 140, width: '100%' }}>
-                <svg viewBox="0 0 500 120" preserveAspectRatio="none" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
-                  <defs>
-                    <linearGradient id={`chartGrad-${selectedService.id}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--brand)" stopOpacity="0.2" />
-                      <stop offset="100%" stopColor="var(--brand)" stopOpacity="0.0" />
-                    </linearGradient>
-                  </defs>
-                  <line x1="0" y1="20" x2="500" y2="20" stroke="var(--border)" strokeWidth="0.5" strokeDasharray="3 3" />
-                  <line x1="0" y1="60" x2="500" y2="60" stroke="var(--border)" strokeWidth="0.5" strokeDasharray="3 3" />
-                  <line x1="0" y1="100" x2="500" y2="100" stroke="var(--border)" strokeWidth="0.5" strokeDasharray="3 3" />
+            <div className="panel" style={{ padding: 24, background: 'var(--surface)', borderRadius: 12 }}>
+              <h3 style={{ fontWeight: 800, fontSize: 16, color: 'var(--fg)', margin: '0 0 18px 0' }}>Response Time Trend (last 24h)</h3>
+              <div style={{ height: 160, width: '100%', position: 'relative', paddingLeft: 30 }}>
+                {/* Y-axis Labels on Left */}
+                <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', fontSize: 10, color: 'var(--faint)', fontFamily: 'monospace' }}>
+                  <span>{Math.round(latency * 1.5)}ms</span>
+                  <span>{Math.round(latency * 1.0)}ms</span>
+                  <span>{Math.round(latency * 0.5)}ms</span>
+                  <span>0ms</span>
+                </div>
+                <div style={{ height: '100%', width: '100%' }}>
+                  <svg viewBox="0 0 500 120" preserveAspectRatio="none" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
+                    <defs>
+                      <linearGradient id={`chartGrad-${selectedService.id}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--brand)" stopOpacity="0.25" />
+                        <stop offset="100%" stopColor="var(--brand)" stopOpacity="0.0" />
+                      </linearGradient>
+                    </defs>
+                    <line x1="0" y1="20" x2="500" y2="20" stroke="var(--border)" strokeWidth="0.5" strokeDasharray="3 3" />
+                    <line x1="0" y1="60" x2="500" y2="60" stroke="var(--border)" strokeWidth="0.5" strokeDasharray="3 3" />
+                    <line x1="0" y1="100" x2="500" y2="100" stroke="var(--border)" strokeWidth="0.5" strokeDasharray="3 3" />
 
-                  {/* Gradient Area Fill */}
-                  <path
-                    d={(() => {
-                      const baseLatency = latency
-                      const points = Array.from({ length: 30 }, (_, idx) => {
-                        const noise = Math.sin(idx * 0.8) * (baseLatency * 0.15)
-                        const spike = idx === 12 || idx === 25 ? baseLatency * 0.4 : 0
-                        return baseLatency + noise + spike
-                      })
-                      const max = Math.max(...points) * 1.15
-                      const min = Math.min(...points) * 0.8
-                      const range = max - min || 20
+                    {/* Gradient Area Fill */}
+                    <path
+                      d={(() => {
+                        const baseLatency = latency
+                        const points = Array.from({ length: 30 }, (_, idx) => {
+                          const noise = Math.sin(idx * 0.8) * (baseLatency * 0.15)
+                          const spike = idx === 12 || idx === 25 ? baseLatency * 0.4 : 0
+                          return baseLatency + noise + spike
+                        })
+                        const max = Math.max(...points) * 1.15
+                        const min = Math.min(...points) * 0.8
+                        const range = max - min || 20
 
-                      const coordinates = points.map((p, idx) => {
-                        const x = (idx / (points.length - 1)) * 500
-                        const y = 110 - ((p - min) / range) * 90
-                        return { x, y }
-                      })
+                        const coordinates = points.map((p, idx) => {
+                          const x = (idx / (points.length - 1)) * 500
+                          const y = 110 - ((p - min) / range) * 90
+                          return { x, y }
+                        })
 
-                      const linePath = coordinates.map((c, idx) => `${idx === 0 ? 'M' : 'L'} ${c.x} ${c.y}`).join(' ')
-                      const areaPath = `${linePath} L 500 110 L 0 110 Z`
+                        const linePath = coordinates.map((c, idx) => `${idx === 0 ? 'M' : 'L'} ${c.x} ${c.y}`).join(' ')
+                        const areaPath = `${linePath} L 500 110 L 0 110 Z`
 
-                      return { linePath, areaPath }
-                    })().areaPath}
-                    fill={`url(#chartGrad-${selectedService.id})`}
-                  />
+                        return { linePath, areaPath }
+                      })().areaPath}
+                      fill={`url(#chartGrad-${selectedService.id})`}
+                    />
 
-                  {/* Top Line */}
-                  <path
-                    d={(() => {
-                      const baseLatency = latency
-                      const points = Array.from({ length: 30 }, (_, idx) => {
-                        const noise = Math.sin(idx * 0.8) * (baseLatency * 0.15)
-                        const spike = idx === 12 || idx === 25 ? baseLatency * 0.4 : 0
-                        return baseLatency + noise + spike
-                      })
-                      const max = Math.max(...points) * 1.15
-                      const min = Math.min(...points) * 0.8
-                      const range = max - min || 20
+                    {/* Top Line */}
+                    <path
+                      d={(() => {
+                        const baseLatency = latency
+                        const points = Array.from({ length: 30 }, (_, idx) => {
+                          const noise = Math.sin(idx * 0.8) * (baseLatency * 0.15)
+                          const spike = idx === 12 || idx === 25 ? baseLatency * 0.4 : 0
+                          return baseLatency + noise + spike
+                        })
+                        const max = Math.max(...points) * 1.15
+                        const min = Math.min(...points) * 0.8
+                        const range = max - min || 20
 
-                      return points.map((p, idx) => {
-                        const x = (idx / (points.length - 1)) * 500
-                        const y = 110 - ((p - min) / range) * 90
-                        return `${idx === 0 ? 'M' : 'L'} ${x} ${y}`
-                      }).join(' ')
-                    })()}
-                    fill="none"
-                    stroke="var(--brand)"
-                    strokeWidth="2"
-                  />
-                </svg>
+                        return points.map((p, idx) => {
+                          const x = (idx / (points.length - 1)) * 500
+                          const y = 110 - ((p - min) / range) * 90
+                          return `${idx === 0 ? 'M' : 'L'} ${x} ${y}`
+                        }).join(' ')
+                      })()}
+                      fill="none"
+                      stroke="var(--brand)"
+                      strokeWidth="2.5"
+                    />
+                  </svg>
+                </div>
               </div>
             </div>
 
             {/* Historical Uptime Stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16 }}>
               {[
                 { label: 'Last 30 days', uptime: '99.96%', checks: '43,200' },
                 { label: 'Last 7 days', uptime: '99.98%', checks: '10,080' },
                 { label: 'Last 24 hours', uptime: '100%', checks: '1,440' },
                 { label: 'Last hour', uptime: '100%', checks: '60' },
               ].map((period) => (
-                <div key={period.label} className="panel" style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 4, background: 'var(--surface)' }}>
-                  <span style={{ fontSize: 11, color: 'var(--muted)' }}>{period.label}</span>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--fg)' }}>{period.uptime}</span>
-                  <span style={{ fontSize: 9.5, color: 'var(--faint)' }}>{period.checks} checks</span>
+                <div key={period.label} className="panel" style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 6, background: 'var(--surface)', borderRadius: 10 }}>
+                  <span style={{ fontSize: 11.5, color: 'var(--muted)', fontWeight: 600 }}>{period.label}</span>
+                  <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--fg)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--success)' }} />
+                    {period.uptime}
+                  </span>
+                  <span style={{ fontSize: 10.5, color: 'var(--faint)' }}>{period.checks} checks</span>
                 </div>
               ))}
             </div>
 
             {/* Events Timeline */}
-            <div className="panel" style={{ padding: 20, background: 'var(--surface)' }}>
-              <h3 style={{ fontWeight: 700, fontSize: 14, color: 'var(--fg)', marginBottom: 16 }}>Events</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div className="panel" style={{ padding: 24, background: 'var(--surface)', borderRadius: 12 }}>
+              <h3 style={{ fontWeight: 800, fontSize: 16, color: 'var(--fg)', margin: '0 0 20px 0' }}>Events</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                 {[
                   { title: 'Restored to healthy', time: '2 hours ago', desc: 'Latency returned to normal. No anomalous error rates.', status: 'success' },
                   { title: 'Degraded Performance detected', time: '5 hours ago', desc: 'Average latency crossed threshold (420ms).', status: 'warn' },
                   { title: 'Monitoring started', time: '3 days ago', desc: 'Endpoint check registered and active.', status: 'info' }
                 ].map((ev, idx) => (
-                  <div key={idx} style={{ display: 'flex', gap: 12 }}>
+                  <div key={idx} style={{ display: 'flex', gap: 16 }}>
                     <div style={{
-                      width: 8, height: 8, borderRadius: '50%', marginTop: 5,
+                      width: 10, height: 10, borderRadius: '50%', marginTop: 5, flexShrink: 0,
                       background: ev.status === 'success' ? 'var(--success)' : ev.status === 'warn' ? 'var(--warn)' : 'var(--brand)'
                     }} />
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--fg)' }}>{ev.title}</span>
-                        <span style={{ fontSize: 11, color: 'var(--faint)' }}>{ev.time}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--fg)' }}>{ev.title}</span>
+                        <span style={{ fontSize: 12, color: 'var(--faint)' }}>{ev.time}</span>
                       </div>
-                      <p style={{ fontSize: 12, color: 'var(--muted)', margin: '4px 0 0', lineHeight: 1.4 }}>{ev.desc}</p>
+                      <p style={{ fontSize: 13, color: 'var(--muted)', margin: '6px 0 0', lineHeight: 1.45 }}>{ev.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -629,7 +641,7 @@ export function PublicStatusPage() {
               No services match your filters.
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
               {filteredServices.map((s) => {
                 const health = normalizeHealth(s.health)
                 const meta = HEALTH_META[health]
@@ -642,14 +654,15 @@ export function PublicStatusPage() {
                     className="panel"
                     onClick={() => setSelectedServiceId(s.id)}
                     style={{
-                      padding: 16,
+                      padding: 20,
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: 12,
+                      gap: 14,
                       cursor: 'pointer',
                       transition: 'transform 0.12s ease, border-color 0.12s ease',
                       border: '1px solid var(--border)',
                       background: 'var(--surface)',
+                      borderRadius: 10
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = 'translateY(-2px)'
@@ -662,25 +675,25 @@ export function PublicStatusPage() {
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--fg)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--fg)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {s.name}
                         </div>
-                        <div style={{ fontSize: 10.5, color: 'var(--muted)', marginTop: 2 }}>
+                        <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 3 }}>
                           {s.type} · {s.env}
                         </div>
                       </div>
-                      <span className={`badge ${meta.badge}`} style={{ fontSize: 10, padding: '2px 6px', flexShrink: 0 }}>
+                      <span className={`badge ${meta.badge}`} style={{ fontSize: 11, padding: '3px 8px', flexShrink: 0 }}>
                         {health === 'operational' ? 'Healthy' : health === 'degraded' ? 'Degraded' : 'Outage'}
                       </span>
                     </div>
 
-                    <div style={{ display: 'flex', gap: 2, height: 16, width: '100%' }}>
+                    <div style={{ display: 'flex', gap: 2.5, height: 22, width: '100%' }}>
                       {ticks.map((t, idx) => (
                         <div
                           key={idx}
                           style={{
                             flex: 1,
-                            borderRadius: 1.5,
+                            borderRadius: 2,
                             background: t === 'operational' ? 'var(--success)' : t === 'degraded' ? 'var(--warn)' : 'var(--error)',
                             opacity: 0.9,
                           }}
@@ -688,7 +701,7 @@ export function PublicStatusPage() {
                       ))}
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: 'var(--faint)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--faint)' }}>
                       <span>{ticks.length} checks</span>
                       <span className="mono">{latency}ms</span>
                     </div>
