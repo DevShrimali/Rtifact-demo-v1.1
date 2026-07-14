@@ -222,7 +222,10 @@ export function PublicStatusPage() {
         <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.01em', color: 'var(--fg)' }}>{site.name}</span>
       </div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-        {config.headerLinks.map((link) => (
+        {(config.headerLinks && config.headerLinks.length > 0
+          ? config.headerLinks
+          : [{ label: 'Get in touch', url: 'mailto:support@rtifact.io' }]
+        ).map((link) => (
           <a
             key={link.url}
             href={link.url}
@@ -234,7 +237,7 @@ export function PublicStatusPage() {
             {link.label}
           </a>
         ))}
-        {config.subscribeEnabled && (
+        {(config.subscribeEnabled || site.id === 'internal') && (
           <button className="btn btn-primary" onClick={() => setShowSubModal(true)} style={{ fontSize: 12.5 }}>
             Subscribe to updates
           </button>

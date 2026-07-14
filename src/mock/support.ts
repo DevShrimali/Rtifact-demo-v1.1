@@ -712,8 +712,8 @@ export const publicPageConfigs: Record<string, PublicPageConfig> = {
     monitorDetailLevel: 'hover',
     logoImageUrl: null,
     faviconImageUrl: null,
-    headerLinks: [],
-    subscribeEnabled: false,
+    headerLinks: [{ label: 'Get in touch', url: 'mailto:support@rtifact.io' }],
+    subscribeEnabled: true,
     showAttribution: true,
     welcomeMessage: 'Internal platform health — visible to Rtifact employees only.',
     entries: [
