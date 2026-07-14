@@ -1,0 +1,459 @@
+import { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import {
+  AlertTriangle,
+  CheckCircle,
+  ChevronDown,
+  ChevronRight,
+  Wrench,
+} from 'lucide-react'
+import {
+  getPublicPageConfig,
+  getServiceGroups,
+  maintenanceWindows,
+  normalizeHealth,
+  resolvePageEntries,
+  serviceHistory,
+  serviceLatencyMs,
+  servicesFromResolvedEntries,
+  siteIncidents,
+  sites,
+  type ComponentHealth,
+  type MonitorDetailLevel,
+  type PublicPageConfig,
+  type RegistryService,
+  type ResolvedPageEntry,
+  type ServiceGroup,
+} from '../../mock/support'
+
+function resolveTheme(theme: PublicPageConfig['theme']): 'light' | 'dark' {
+  if (theme !== 'system') return theme
+  if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches) return 'dark'
+  return 'light'
+}
+
+const HEALTH_META: Record<ComponentHealth, { label: string; dot: string; badge: string; colorVar: string; softVar: string }> = {
+  operational: { label: 'Operational', dot: 'healthy', badge: 'sev-healthy', colorVar: 'var(--success)', softVar: 'var(--success-soft)' },
+  degraded: { label: 'Degraded Performance', dot: 'degraded', badge: 'sev-warning', colorVar: 'var(--warn)', softVar: 'var(--warn-soft)' },
+  outage: { label: 'Outage', dot: 'critical', badge: 'sev-critical', colorVar: 'var(--error)', softVar: 'var(--error-soft)' },
+}
+
+function overallHealth(services: RegistryService[]): ComponentHealth {
+  if (services.some((s) => normalizeHealth(s.health) === 'outage')) return 'outage'
+  if (services.some((s) => normalizeHealth(s.health) === 'degraded')) return 'degraded'
+  return 'operational'
+}
+
+function uptimePct(history: ComponentHealth[]): string {
+  if (history.length === 0) return '100.00'
+  const bad = history.filter((h) => h !== 'operational').length
+  return (100 - (bad / history.length) * 100).toFixed(2)
+}
+
+/* Shared monitor health display — the 3 detail levels the user picks per status page. */
+function MonitorHealth({ service, level }: { service: RegistryService; level: MonitorDetailLevel }) {
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null)
+  const health = normalizeHealth(service.health)
+  const history = serviceHistory(service)
+  const avgLatencyMs = serviceLatencyMs(service)
+  const meta = HEALTH_META[health]
+
+  if (level === 'tick') {
+    return (
+      <span className={`badge ${meta.badge}`} style={{ fontSize: 11 }}>
+        <span className={`dot ${meta.dot}`} style={{ width: 6, height: 6 }} />
+        {meta.label}
+      </span>
+    )
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%' }}>
+      <div style={{ display: 'flex', gap: 2, height: 26, position: 'relative' }}>
+        {history.map((h, i) => {
+          const hm = HEALTH_META[h]
+          return (
+            <div
+              key={i}
+              onMouseEnter={level === 'hover' ? () => setHoverIdx(i) : undefined}
+              onMouseLeave={level === 'hover' ? () => setHoverIdx(null) : undefined}
+              style={{ flex: 1, background: hm.colorVar, borderRadius: 1, opacity: 0.95, cursor: level === 'hover' ? 'pointer' : 'default', position: 'relative' }}
+            >
+              {level === 'hover' && hoverIdx === i && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: '120%',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    background: 'var(--fg)',
+                    color: 'var(--bg)',
+                    borderRadius: 6,
+                    padding: '8px 10px',
+                    fontSize: 11,
+                    whiteSpace: 'nowrap',
+                    zIndex: 20,
+                    boxShadow: 'var(--shadow)',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  <div style={{ fontWeight: 700 }}>{90 - i} days ago</div>
+                  <div>{hm.label}</div>
+                  <div style={{ opacity: 0.75 }}>~{avgLatencyMs}ms avg latency</div>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: 'var(--faint)' }}>
+        <span>90 days ago</span>
+        <span>{uptimePct(history)}% uptime</span>
+        <span>Today</span>
+      </div>
+    </div>
+  )
+}
+
+/** A single flat service — no accordion. Reused both at the top level and (indented) inside an expanded group. */
+function ServiceRow({ service, level, isLast, indent }: { service: RegistryService; level: MonitorDetailLevel; isLast?: boolean; indent?: boolean }) {
+  return (
+    <div style={{ padding: indent ? '14px 20px 14px 40px' : '16px 20px', borderBottom: isLast ? 'none' : '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--fg)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span className={`dot ${HEALTH_META[normalizeHealth(service.health)].dot}`} style={{ width: 6, height: 6 }} />
+          {service.name}
+        </span>
+        {level === 'tick' && <MonitorHealth service={service} level="tick" />}
+      </div>
+      {level !== 'tick' && <MonitorHealth service={service} level={level} />}
+    </div>
+  )
+}
+
+/** A group, rendered as a collapsible accordion of its services. */
+function GroupAccordion({ group, level, expanded, onToggle }: { group: ServiceGroup; level: MonitorDetailLevel; expanded: boolean; onToggle: () => void }) {
+  const gMeta = HEALTH_META[overallHealth(group.services)]
+  return (
+    <div>
+      <div
+        onClick={onToggle}
+        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', cursor: 'pointer', background: 'var(--surface)', borderBottom: expanded ? '1px solid var(--border)' : 'none' }}
+      >
+        <span style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--fg)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          {expanded ? <ChevronDown size={14} style={{ color: 'var(--muted)' }} /> : <ChevronRight size={14} style={{ color: 'var(--muted)' }} />}
+          {group.name}
+        </span>
+        <span className={`badge ${gMeta.badge}`} style={{ fontSize: 11 }}>
+          <span className={`dot ${gMeta.dot}`} style={{ width: 6, height: 6 }} />
+          {gMeta.label}
+        </span>
+      </div>
+      {expanded && group.services.map((s, idx) => (
+        <ServiceRow key={s.id} service={s} level={level} isLast={idx === group.services.length - 1} indent />
+      ))}
+    </div>
+  )
+}
+
+export function PublicStatusPage() {
+  const { siteId } = useParams()
+  const site = sites.find((s) => s.id === siteId) ?? sites[0]
+  const [config] = useState<PublicPageConfig>(() => getPublicPageConfig(siteId ?? site.id))
+  const [subscribed, setSubscribed] = useState(false)
+  const [emailInput, setEmailInput] = useState('')
+  const [showSubModal, setShowSubModal] = useState(false)
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({})
+
+  const resolvedTheme = resolveTheme(config.theme)
+  const incidents = siteIncidents[site.id] ?? []
+  const openIncidents = incidents.filter((i) => !i.resolved)
+  const windows = maintenanceWindows(site.id)
+  const resolvedEntries: ResolvedPageEntry[] = resolvePageEntries(config.entries, getServiceGroups())
+  const health = overallHealth(servicesFromResolvedEntries(resolvedEntries))
+  const healthMeta = HEALTH_META[health]
+
+  useEffect(() => {
+    document.title = `${site.name} Status`
+    if (!config.faviconImageUrl) return
+    let link = document.querySelector<HTMLLinkElement>("link[rel='icon']")
+    if (!link) {
+      link = document.createElement('link')
+      link.rel = 'icon'
+      document.head.appendChild(link)
+    }
+    link.href = config.faviconImageUrl
+  }, [site.name, config.faviconImageUrl])
+
+  const handleSubscribeSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!emailInput.trim()) return
+    setSubscribed(true)
+    setTimeout(() => {
+      setShowSubModal(false)
+      setSubscribed(false)
+      setEmailInput('')
+    }, 1800)
+  }
+
+  const toggleGroup = (id: string) => setExpandedGroups((prev) => ({ ...prev, [id]: !(prev[id] ?? true) }))
+
+  const Header = (
+    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        {config.logoImageUrl ? (
+          <img src={config.logoImageUrl} alt={site.name} style={{ height: 28, maxWidth: 140, objectFit: 'contain' }} />
+        ) : (
+          <span style={{ width: 28, height: 28, borderRadius: 6, background: 'var(--brand)', color: '#fff', fontWeight: 800, fontSize: 14, display: 'grid', placeItems: 'center' }}>
+            {site.name[0]?.toUpperCase()}
+          </span>
+        )}
+        <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.01em', color: 'var(--fg)' }}>{site.name}</span>
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {config.headerLinks.map((link) => (
+          <a
+            key={link.url}
+            href={link.url}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-secondary"
+            style={{ textDecoration: 'none', fontSize: 12.5 }}
+          >
+            {link.label}
+          </a>
+        ))}
+        {config.subscribeEnabled && (
+          <button className="btn btn-primary" onClick={() => setShowSubModal(true)} style={{ fontSize: 12.5 }}>
+            Subscribe to updates
+          </button>
+        )}
+      </div>
+    </header>
+  )
+
+  const WelcomeMessage = config.welcomeMessage.trim() ? (
+    <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.5 }}>{config.welcomeMessage}</p>
+  ) : null
+
+  const IncidentsSection = openIncidents.length > 0 ? (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--error)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        Active Incidents
+      </div>
+      {openIncidents.map((inc) => (
+        <div key={inc.id} className="panel" style={{ padding: 18 }}>
+          <h3 style={{ fontSize: 15, fontWeight: 700, margin: 0, color: 'var(--fg)' }}>{inc.title}</h3>
+          <p style={{ fontSize: 13, color: 'var(--muted)', margin: '8px 0 0 0', lineHeight: 1.5 }}>{inc.publicUpdate}</p>
+        </div>
+      ))}
+    </div>
+  ) : null
+
+  const MaintenanceSection = windows.length > 0 ? (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--brand)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        Upcoming Maintenance
+      </div>
+      {windows.map((w) => (
+        <div key={w.id} className="panel" style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Wrench size={16} style={{ color: 'var(--brand)', flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--fg)' }}>{w.title}</div>
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{w.scope}</div>
+          </div>
+          <span className="badge neutral" style={{ flexShrink: 0 }}>starts in {w.startsInHours}h · {w.durationMin}m</span>
+        </div>
+      ))}
+    </div>
+  ) : null
+
+  const Footer = (
+    <footer style={{ textAlign: 'center', fontSize: 11, color: 'var(--faint)', marginTop: 12 }}>
+      {config.showAttribution && (
+        <div>Powered by <span style={{ fontWeight: 700, color: 'var(--muted)' }}>Rtifact</span></div>
+      )}
+    </footer>
+  )
+
+  // Shared body for banner/minimal — a single bordered panel mixing flat service
+  // rows with inline group accordions, in the order the operator arranged them.
+  const EntriesPanel = (title: string) => (
+    <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>
+      <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', fontWeight: 700, fontSize: 13.5, color: 'var(--fg)' }}>
+        {title}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {resolvedEntries.map((e, idx, arr) => {
+          const isLastEntry = idx === arr.length - 1
+          if (e.type === 'service') return <ServiceRow key={e.service.id} service={e.service} level={config.monitorDetailLevel} isLast={isLastEntry} />
+          return (
+            <div key={e.group.id} style={{ borderBottom: isLastEntry ? 'none' : '1px solid var(--border)' }}>
+              <GroupAccordion group={e.group} level={config.monitorDetailLevel} expanded={expandedGroups[e.group.id] ?? true} onToggle={() => toggleGroup(e.group.id)} />
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+
+  let body: React.ReactNode
+
+  if (config.template === 'banner') {
+    body = (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+        {Header}
+        {WelcomeMessage}
+        <div style={{ textAlign: 'center', padding: '20px 0' }}>
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: healthMeta.softVar, color: healthMeta.colorVar, display: 'grid', placeItems: 'center', margin: '0 auto 16px' }}>
+            {health === 'operational' ? <CheckCircle size={30} /> : <AlertTriangle size={30} />}
+          </div>
+          <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--fg)', margin: 0 }}>
+            {health === 'operational' ? 'All services are online' : health === 'degraded' ? 'Some services are degraded' : 'We are experiencing an outage'}
+          </h1>
+          <p style={{ fontSize: 12.5, color: 'var(--faint)', marginTop: 8 }}>Last updated just now</p>
+        </div>
+        {IncidentsSection}
+        {MaintenanceSection}
+        {EntriesPanel('Services')}
+        {Footer}
+      </div>
+    )
+  } else if (config.template === 'dashboard') {
+    const allServices = servicesFromResolvedEntries(resolvedEntries)
+    body = (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        {Header}
+        {WelcomeMessage}
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--fg)', margin: 0 }}>Health Dashboard</h1>
+          <p style={{ fontSize: 12.5, color: 'var(--faint)', marginTop: 4 }}>Monitoring {allServices.length} services in real time</p>
+        </div>
+        {IncidentsSection}
+        {MaintenanceSection}
+        <div style={{ display: 'grid', gap: 14 }}>
+          {resolvedEntries.map((e) => {
+            if (e.type === 'service') {
+              return (
+                <div key={e.service.id} className="panel" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--fg)' }}>{e.service.name}</span>
+                    <MonitorHealth service={e.service} level="tick" />
+                  </div>
+                  {config.monitorDetailLevel !== 'tick' && <MonitorHealth service={e.service} level={config.monitorDetailLevel} />}
+                </div>
+              )
+            }
+            const expanded = expandedGroups[e.group.id] ?? true
+            return (
+              <div key={e.group.id} className="panel" style={{ padding: 0, overflow: 'hidden', gridColumn: '1 / -1' }}>
+                <GroupAccordion group={e.group} level={config.monitorDetailLevel} expanded={expanded} onToggle={() => toggleGroup(e.group.id)} />
+              </div>
+            )
+          })}
+        </div>
+        {Footer}
+      </div>
+    )
+  } else if (config.template === 'grouped') {
+    body = (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        {Header}
+        {WelcomeMessage}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10, padding: '14px 18px', borderRadius: 10,
+          background: healthMeta.softVar, color: healthMeta.colorVar, fontWeight: 700, fontSize: 14,
+        }}>
+          {health === 'operational' ? <CheckCircle size={18} /> : <AlertTriangle size={18} />}
+          {health === 'operational' ? "We're fully operational" : health === 'degraded' ? 'Degraded performance on some services' : 'Active outage affecting services'}
+        </div>
+        {IncidentsSection}
+        {MaintenanceSection}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {resolvedEntries.map((e) => {
+            if (e.type === 'service') {
+              return (
+                <div key={e.service.id} className="panel" style={{ padding: 0, overflow: 'hidden' }}>
+                  <ServiceRow service={e.service} level={config.monitorDetailLevel} isLast />
+                </div>
+              )
+            }
+            const expanded = expandedGroups[e.group.id] ?? true
+            return (
+              <div key={e.group.id} className="panel" style={{ padding: 0, overflow: 'hidden' }}>
+                <GroupAccordion group={e.group} level={config.monitorDetailLevel} expanded={expanded} onToggle={() => toggleGroup(e.group.id)} />
+              </div>
+            )
+          })}
+        </div>
+        {Footer}
+      </div>
+    )
+  } else {
+    // minimal
+    body = (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        {Header}
+        {WelcomeMessage}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10, padding: '16px 20px', borderRadius: 10,
+          background: healthMeta.softVar, color: healthMeta.colorVar,
+        }}>
+          {health === 'operational' ? <CheckCircle size={20} /> : <AlertTriangle size={20} />}
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 15 }}>
+              {health === 'operational' ? "We're fully operational" : health === 'degraded' ? 'Degraded performance' : 'Active outage'}
+            </div>
+            <div style={{ fontSize: 12.5, opacity: 0.85, marginTop: 2 }}>
+              {health === 'operational' ? "We're not aware of any issues affecting our systems." : 'See affected components below for details.'}
+            </div>
+          </div>
+        </div>
+        {IncidentsSection}
+        {MaintenanceSection}
+        {EntriesPanel('System status')}
+        {Footer}
+      </div>
+    )
+  }
+
+  return (
+    <div data-theme={resolvedTheme} style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: '48px 20px' }}>{body}</div>
+
+      {showSubModal && (
+        <div
+          onClick={() => setShowSubModal(false)}
+          style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'grid', placeItems: 'center', zIndex: 9999, padding: 20 }}
+        >
+          <div className="panel" onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 420, padding: 24 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 8, color: 'var(--fg)' }}>Subscribe to updates</h3>
+            <p style={{ color: 'var(--muted)', fontSize: 12.5, lineHeight: 1.5, marginBottom: 16 }}>
+              Get notified whenever an incident is created, updated, or resolved.
+            </p>
+            {subscribed ? (
+              <div style={{ textAlign: 'center', padding: '16px 0', color: 'var(--success)', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                <CheckCircle size={16} /> Subscribed successfully!
+              </div>
+            ) : (
+              <form onSubmit={handleSubscribeSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <input
+                  required
+                  type="email"
+                  className="text-input"
+                  placeholder="name@company.com"
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowSubModal(false)}>Cancel</button>
+                  <button type="submit" className="btn btn-primary">Subscribe</button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
