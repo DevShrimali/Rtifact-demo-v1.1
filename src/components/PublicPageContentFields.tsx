@@ -17,7 +17,6 @@ import {
   type ServiceGroup,
 } from '../mock/support'
 import { Select, type SelectOption } from './Select'
-import { Switch } from './Switch'
 
 interface PublicPageContentFieldsProps {
   config: PublicPageConfig

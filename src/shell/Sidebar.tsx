@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
   LifeBuoy,
@@ -106,6 +106,25 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
     return group.to ? location.pathname.startsWith(group.to) : false
   }
 
+  // Automatically expand active groups on route change
+  useEffect(() => {
+    const activeGroups: Record<string, boolean> = {}
+    groups.forEach((group) => {
+      if (isGroupActive(group)) {
+        activeGroups[group.label] = true
+      }
+    })
+    if (Object.keys(activeGroups).length > 0) {
+      setExpanded((prev) => {
+        const needsUpdate = Object.keys(activeGroups).some((key) => !prev[key])
+        if (!needsUpdate) return prev
+        const next = { ...prev, ...activeGroups }
+        localStorage.setItem('rtifact.sidebar.expandedGroups', JSON.stringify(next))
+        return next
+      })
+    }
+  }, [location.pathname])
+
   return (
     <aside className="sidebar">
       <div className="wordmark">
@@ -126,7 +145,6 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
         {modulesExpanded && groups.map((group) => {
           const hasSubs = !!group.subItems
           const isExpanded = expanded[group.label]
-          const groupActive = isGroupActive(group)
 
           return (
             <div key={group.label} className="sidebar-group-container" style={{ display: 'flex', flexDirection: 'column' }}>
@@ -135,11 +153,12 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
                   <NavLink
                     to={group.to!}
                     onClick={() => {
-                      if (!isExpanded) {
-                        setExpanded((prev) => ({ ...prev, [group.label]: true }))
-                      } else if (groupActive) {
-                        toggleGroup(group.label)
-                      }
+                      // Always expand the group when clicking the header link
+                      setExpanded((prev) => {
+                        const next = { ...prev, [group.label]: true }
+                        localStorage.setItem('rtifact.sidebar.expandedGroups', JSON.stringify(next))
+                        return next
+                      })
                     }}
                     className={() => "nav-item nav-group-header"}
                     end={true}

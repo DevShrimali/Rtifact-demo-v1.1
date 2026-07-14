@@ -1468,12 +1468,12 @@ export function SitesPage() {
                         {/* Right items */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                           {/* Group Status */}
-                          <span className={`badge ${groupStatusClass}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5 }}>
+                          <span className={`badge ${groupStatusClass}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                             <span className={`dot ${groupDotClass}`} style={{ width: 5, height: 5 }} />
                             {groupStatusLabel}
                           </span>
 
-                          <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: 11.5 }} onClick={() => openAddService(group.id)}>
+                          <button className="btn btn-secondary" style={{ padding: '4px 10px' }} onClick={() => openAddService(group.id)}>
                             + Add Service
                           </button>
 
@@ -1633,7 +1633,7 @@ export function SitesPage() {
 
                                   {/* Right details */}
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                                    <span className={`badge ${sStatusClass}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11 }}>
+                                    <span className={`badge ${sStatusClass}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                                       <span className={`dot ${sDotClass}`} style={{ width: 5, height: 5 }} />
                                       {svc.health}
                                     </span>
@@ -1758,10 +1758,9 @@ export function SitesPage() {
                         key={t.key}
                         className={`segment-btn ${incidentView === t.key ? 'active' : ''}`}
                         onClick={() => setIncidentView(t.key)}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                       >
                         {t.label}
-                        <span style={{ fontSize: 10.5, color: 'var(--muted)', background: 'var(--chip)', padding: '1px 5px', borderRadius: 4 }}>
+                        <span className="segment-count">
                           {t.count}
                         </span>
                       </button>
@@ -1888,10 +1887,9 @@ export function SitesPage() {
                       key={t.key}
                       className={`segment-btn ${maintView === t.key ? 'active' : ''}`}
                       onClick={() => setMaintView(t.key)}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                     >
                       {t.label}
-                      <span style={{ fontSize: 10.5, color: 'var(--muted)', background: 'var(--chip)', padding: '1px 5px', borderRadius: 4 }}>
+                      <span className="segment-count">
                         {t.count}
                       </span>
                     </button>

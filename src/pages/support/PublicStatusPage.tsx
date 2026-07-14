@@ -60,7 +60,7 @@ function MonitorHealth({ service, level }: { service: RegistryService; level: Mo
 
   if (level === 'tick') {
     return (
-      <span className={`badge ${meta.badge}`} style={{ fontSize: 11 }}>
+      <span className={`badge ${meta.badge}`}>
         <span className={`dot ${meta.dot}`} style={{ width: 6, height: 6 }} />
         {meta.label}
       </span>
@@ -144,7 +144,7 @@ function GroupAccordion({ group, level, expanded, onToggle }: { group: ServiceGr
           {expanded ? <ChevronDown size={14} style={{ color: 'var(--muted)' }} /> : <ChevronRight size={14} style={{ color: 'var(--muted)' }} />}
           {group.name}
         </span>
-        <span className={`badge ${gMeta.badge}`} style={{ fontSize: 11 }}>
+        <span className={`badge ${gMeta.badge}`}>
           <span className={`dot ${gMeta.dot}`} style={{ width: 6, height: 6 }} />
           {gMeta.label}
         </span>
@@ -418,7 +418,7 @@ export function PublicStatusPage() {
   }
 
   return (
-    <div data-theme={resolvedTheme} style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+    <div data-theme={resolvedTheme} style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--fg)' }}>
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '48px 20px' }}>{body}</div>
 
       {showSubModal && (

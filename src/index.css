@@ -4677,18 +4677,21 @@ select.text-input {
 
 .settings-shell {
   display: grid;
-  grid-template-columns: 210px 1fr;
-  gap: 24px;
-  align-items: start;
-  margin-left: -16px;
+  grid-template-columns: 220px 1fr;
+  align-items: stretch;
+  margin: -28px -32px -60px;
+  min-height: calc(100vh - 78px);
 }
 
 .settings-rail {
   position: sticky;
-  top: 28px;
+  top: 0;
   display: flex;
   flex-direction: column;
   gap: 24px;
+  background: var(--nav);
+  border-right: 1px solid var(--border);
+  padding: 28px 24px 60px;
 }
 
 .settings-group {
@@ -4709,7 +4712,6 @@ select.text-input {
 
 .settings-rail-item {
   padding: 6px 12px;
-  margin-left: 8px;
   border-radius: 6px;
   font-size: 12.5px;
   font-weight: 500;
@@ -4730,6 +4732,7 @@ select.text-input {
 
 .settings-content {
   min-width: 0;
+  padding: 28px 32px 60px;
 }
 
 .settings-content .page-head {
@@ -4739,12 +4742,21 @@ select.text-input {
 @media (max-width: 900px) {
   .settings-shell {
     grid-template-columns: 1fr;
+    margin: 0;
+    min-height: auto;
   }
   .settings-rail {
     position: static;
     flex-direction: row;
     flex-wrap: wrap;
     gap: 8px;
+    background: transparent;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 12px 0 16px;
+  }
+  .settings-content {
+    padding: 16px 0 32px;
   }
 }
 
@@ -5747,6 +5759,10 @@ select.text-input {
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .segment-btn:hover {
@@ -5757,6 +5773,27 @@ select.text-input {
   background: var(--chip);
   color: var(--fg);
   font-weight: 600;
+}
+
+.segment-count {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 1px 5px;
+  border-radius: 4px;
+  transition: all 0.12s ease;
+}
+
+.segment-btn:hover .segment-count {
+  color: var(--fg);
+}
+
+.segment-btn.active .segment-count {
+  background: var(--card);
+  color: var(--fg);
+  border-color: var(--border-strong);
 }
 
 /* 3. Search input with prepended icon */

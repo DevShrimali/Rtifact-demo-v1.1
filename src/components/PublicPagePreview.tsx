@@ -482,6 +482,7 @@ export function PublicPagePreview({ config, siteName, subdomain }: PublicPagePre
           data-theme={previewTheme}
           style={{
             background: 'var(--bg)',
+            color: 'var(--fg)',
             padding: 14,
             display: 'flex',
             flexDirection: 'column',

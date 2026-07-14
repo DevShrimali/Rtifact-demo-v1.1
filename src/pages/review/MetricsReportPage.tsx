@@ -63,7 +63,7 @@ export function MetricsReportPage() {
   const [template, setTemplate] = useState(REPORT_TEMPLATES[0])
   const [libOpen, setLibOpen] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
-  const [formatType, setFormatType] = useState<'PDF' | 'CSV' | 'Auditor package'>('PDF')
+  const [formatType, setFormatType] = useState<'PDF' | 'CSV' | 'ZIP'>('PDF')
   const libRef = useRef<HTMLDivElement>(null)
   const expRef = useRef<HTMLDivElement>(null)
 
@@ -241,22 +241,50 @@ export function MetricsReportPage() {
 
             {/* Export options */}
             <div ref={expRef} style={{ position: 'relative', marginLeft: 'auto' }}>
-              <button className="btn btn-primary" onClick={() => setExportOpen((o) => !o)} aria-expanded={exportOpen}>
-                <Download size={14} strokeWidth={2.2} />
-                Export Live Report
-                <ChevronDown size={13} strokeWidth={2.2} />
+              <button
+                className="btn btn-primary"
+                onClick={() => setExportOpen((o) => !o)}
+                aria-expanded={exportOpen}
+                disabled={downloading?.startsWith('export-')}
+              >
+                {downloading?.startsWith('export-') ? (
+                  <>
+                    <Download className="spin" size={14} strokeWidth={2.2} />
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <Download size={14} strokeWidth={2.2} />
+                    Export Live Report
+                    <ChevronDown size={13} strokeWidth={2.2} />
+                  </>
+                )}
               </button>
               {exportOpen && (
-                <div className="mini-menu mini-menu-right" role="menu" aria-label="Export formats list">
-                  <button className="mini-menu-item" role="menuitem" onClick={() => setExportOpen(false)}>
-                    <FileText size={13} strokeWidth={2.2} />
-                    <span>PDF format</span>
-                    <span className="mini-menu-sub mono">~1.2 MB</span>
+                <div className="mini-menu mini-menu-right" role="menu" aria-label="Export formats list" style={{ width: 340 }}>
+                  <button className="mini-menu-item" role="menuitem" onClick={() => { setExportOpen(false); handleDownload('export-pdf') }}>
+                    <FileText size={13} strokeWidth={2.2} style={{ color: 'var(--brand)', flexShrink: 0 }} />
+                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+                      <span style={{ fontWeight: 600 }}>PDF format</span>
+                      <span style={{ fontSize: 10.5, color: 'var(--faint)', fontWeight: 400 }}>Formatted, shareable document</span>
+                    </div>
+                    <span className="mini-menu-sub mono" style={{ flexShrink: 0, marginLeft: 12 }}>~1.2 MB</span>
                   </button>
-                  <button className="mini-menu-item" role="menuitem" onClick={() => setExportOpen(false)}>
-                    <FileArchive size={13} strokeWidth={2.2} />
-                    <span>Auditor Package (.zip)</span>
-                    <span className="mini-menu-sub mono">~4.6 MB</span>
+                  <button className="mini-menu-item" role="menuitem" onClick={() => { setExportOpen(false); handleDownload('export-csv') }}>
+                    <FileText size={13} strokeWidth={2.2} style={{ color: 'var(--success)', flexShrink: 0 }} />
+                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+                      <span style={{ fontWeight: 600 }}>CSV format</span>
+                      <span style={{ fontSize: 10.5, color: 'var(--faint)', fontWeight: 400 }}>Raw telemetry metrics for BI</span>
+                    </div>
+                    <span className="mini-menu-sub mono" style={{ flexShrink: 0, marginLeft: 12 }}>~0.8 MB</span>
+                  </button>
+                  <button className="mini-menu-item" role="menuitem" onClick={() => { setExportOpen(false); handleDownload('export-zip') }}>
+                    <FileArchive size={13} strokeWidth={2.2} style={{ color: 'var(--warn)', flexShrink: 0 }} />
+                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+                      <span style={{ fontWeight: 600 }}>Auditor Package (.zip)</span>
+                      <span style={{ fontSize: 10.5, color: 'var(--faint)', fontWeight: 400 }}>Complete controls & evidence zip</span>
+                    </div>
+                    <span className="mini-menu-sub mono" style={{ flexShrink: 0, marginLeft: 12 }}>~4.6 MB</span>
                   </button>
                 </div>
               )}
@@ -277,6 +305,22 @@ export function MetricsReportPage() {
                     onChange={(e) => setNewScheduleDest(e.target.value)}
                     required
                   />
+                </div>
+                <div className="field">
+                  <span className="field-label">Report format</span>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {(['PDF', 'CSV', 'ZIP'] as const).map((fmt) => (
+                      <button
+                        key={fmt}
+                        type="button"
+                        className={`btn ${formatType === fmt ? 'btn-primary' : 'btn-secondary'}`}
+                        onClick={() => setFormatType(fmt)}
+                        style={{ flex: 1 }}
+                      >
+                        {fmt === 'ZIP' ? 'ZIP (Auditor pkg)' : fmt}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
                   <button type="button" className="btn btn-secondary" onClick={() => setShowScheduleModal(false)}>Cancel</button>
@@ -349,39 +393,6 @@ export function MetricsReportPage() {
                     </div>
                   </div>
                 ))}
-              </div>
-
-              {/* Export format picker */}
-              <div className="panel" style={{ padding: 18, background: 'rgba(59, 130, 246, 0.02)', borderColor: 'rgba(59, 130, 246, 0.1)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                  <span className="dot healthy" />
-                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>Default Export Format</span>
-                  <span style={{ fontSize: 11, color: 'var(--faint)', marginLeft: 'auto' }}>Applies to manual downloads</span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-                  {[
-                    { label: 'PDF format', desc: 'Formatted, shareable document' },
-                    { label: 'CSV format', desc: 'Raw telemetry metrics for BI' },
-                    { label: 'Auditor package', desc: 'Complete controls & evidence zip' },
-                  ].map((f) => (
-                    <button
-                      key={f.label}
-                      type="button"
-                      className="panel"
-                      style={{
-                        padding: 12,
-                        textAlign: 'left',
-                        cursor: 'pointer',
-                        background: formatType === f.label.split(' ')[0] ? 'rgba(59, 130, 246, 0.05)' : 'transparent',
-                        borderColor: formatType === f.label.split(' ')[0] ? 'var(--brand)' : 'var(--border-default)',
-                      }}
-                      onClick={() => setFormatType(f.label.split(' ')[0] as any)}
-                    >
-                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>{f.label}</div>
-                      <div style={{ fontSize: 11, color: 'var(--faint)' }}>{f.desc}</div>
-                    </button>
-                  ))}
-                </div>
               </div>
             </>
           )}

@@ -174,7 +174,7 @@ function loadCustomSites(): StatusSite[] {
       const parsed = JSON.parse(raw) as Array<StatusSite & { visibility: string }>
       return parsed.map((s) => ({
         ...s,
-        visibility: (s.visibility === 'private' ? 'internal' : s.visibility) as StatusSite['visibility'],
+        visibility: ((s.visibility as string) === 'private' ? 'internal' : s.visibility) as StatusSite['visibility'],
       }))
     }
   } catch {
